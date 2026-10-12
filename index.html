@@ -1,0 +1,110 @@
+async function send() {
+  const input = document.getElementById("prompt");
+  const message = input.value.trim();
+
+  if (!message) return;
+
+  addMessage(message, "user");
+  input.value = "";
+  input.style.height = "auto";
+
+  const reply = addMessage("පිළිතුර සකස් කරමින්…", "bot");
+
+  try {
+    const response = await fetch(
+      "YOUR_CLOUDFLARE_WORKER_URL",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Request failed");
+    }export default {
+  async fetch(request, env) {
+    const cors = {
+      "Access-Control-Allow-Origin":
+        "https://surkum511-a11y.github.io",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    };
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: cors });
+    }
+
+    if (request.method !== "POST") {
+      return Response.json(
+        { error: "POST required" },
+        { status: 405, headers: cors }
+      );
+    }
+
+    try {
+      const { message } = await request.json();
+
+      if (typeof message !== "string" || !message.trim()) {
+        return Response.json(
+          { error: "Message is required" },
+          { status: 400, headers: cors }
+        );
+      }
+
+      const result = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": env.GEMINI_API_KEY
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: message }]
+            }]
+          })
+        }
+      );
+
+      const data = await result.json();
+
+      if (!result.ok) {
+        return Response.json(
+          { error: "AI service request failed" },
+          { status: 502, headers: cors }
+        );
+      }
+
+      const answer =
+        data.candidates?.[0]?.content?.parts
+          ?.map(part => part.text || "")
+          .join("") || "පිළිතුරක් ලැබුණේ නැහැ.";
+
+      return Response.json(
+        { answer },
+        { headers: cors }
+      );
+
+    } catch (error) {
+      return Response.json(
+        { error: "Server error" },
+        { status: 500, headers: cors }
+      );
+    }
+  }
+};
+
+    reply.textContent = data.answer;
+    lastAnswer = data.answer;
+
+  } catch (error) {
+    reply.textContent =
+      "AI සම්බන්ධ කිරීමේ ගැටලුවක් තිබෙනවා. Backend URL එක සහ API සැකසුම් පරීක්ෂා කරන්න.";
+  }
+}https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
